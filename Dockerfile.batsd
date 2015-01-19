@@ -1,0 +1,30 @@
+FROM ubuntu:12.04
+MAINTAINER Ash McKenzie <ash@the-rebellion.net>
+
+ENV DEBIAN_FRONTEND noninteractive
+
+# Base
+RUN apt-get update && apt-get install -y build-essential python-software-properties supervisor cron
+
+# BatsD
+RUN add-apt-repository -y ppa:chris-lea/redis-server && apt-get update
+RUN apt-get install -y ruby1.9.3 git redis-server supervisor cron procmail ssmtp
+
+RUN cd /opt && git clone git://github.com/noahhl/batsd && cd batsd && gem install bundler && bundle install
+
+COPY etc/batsd/crontab /etc/
+RUN chown root:root /etc/crontab
+
+COPY etc/batsd/config.yml /opt/batsd/
+COPY etc/batsd/redis.conf /etc/
+COPY etc/batsd/supervisord.conf /etc/
+
+RUN mkdir -p /data/batsd /data/redis
+
+# Cleanup
+RUN rm -rf /tmp/ && apt-get clean && apt-get autoremove -y && mkdir /tmp
+
+VOLUME ["/data"]
+
+EXPOSE 8125 8126 8127
+CMD ["supervisord", "-c", "/etc/supervisord.conf"]

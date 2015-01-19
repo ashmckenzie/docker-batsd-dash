@@ -1,0 +1,15 @@
+batsd:
+  image: nicokaiser/batsd
+  environment:
+    VVERBOSE: 1
+  ports:
+    - "8125:8125/udp"
+    - "8126:8126"
+    - "8127:8127"
+
+dashboard:
+  image: ashmckenzie/batsd-dash
+  ports:
+    - "2080:80"
+  links:
+    - batsd
